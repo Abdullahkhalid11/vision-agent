@@ -1,2 +1,7 @@
 .env
 venv/
+*.pt
+*.onnx
+*.db
+__pycache__/
+data/images/
