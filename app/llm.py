@@ -19,6 +19,18 @@ def _get_client():
     return _client
 
 
+def _usage(resp):
+    # Field names follow the OpenAI-compatible usage object. Confirm against your installed
+    # groq version by printing resp.usage once. Do not trust this comment alone.
+    usage = getattr(resp, "usage", None)
+    if usage is None:
+        return {}
+    return {
+        "input_tokens": getattr(usage, "prompt_tokens", None),
+        "output_tokens": getattr(usage, "completion_tokens", None),
+    }
+
+
 def groq_llm(messages):
     resp = _get_client().chat.completions.create(
         model=MODEL,
@@ -28,10 +40,11 @@ def groq_llm(messages):
         temperature=0.2,  # Groq's tool-use examples recommend 0.0 to 0.5
     )
     msg = resp.choices[0].message
+    usage = _usage(resp)
 
     if not msg.tool_calls:
         content = msg.content or ""
-        return {"text": content, "raw": {"role": "assistant", "content": content}}
+        return {"text": content, "raw": {"role": "assistant", "content": content}, "usage": usage}
 
     raw = {
         "role": "assistant",
@@ -52,10 +65,4 @@ def groq_llm(messages):
         except json.JSONDecodeError:
             args = None  # run_agent reports this back to the model as an error
         calls.append({"id": tc.id, "name": tc.function.name, "args": args})
-    return {"tool_calls": calls, "raw": raw}
-
-
-if __name__ == "__main__":
-    from app.agent import run_agent
-
-    print(run_agent("How many cars are in this image?", "data/images/test1.jpg", groq_llm))
+    return {"tool_calls": calls, "raw": raw, "usage": usage}

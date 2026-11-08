@@ -1,20 +1,28 @@
-"""FastAPI service: /health and /detect. Auth and guards here; detection logic in app.detector."""
+"""FastAPI service: /health and /detect. Auth and guards here; inference in app.detector;
+storage in app.db. Uploads are never kept on disk, only their hash, size and detections."""
 import hashlib
 import hmac
+import io
 import os
 import tempfile
+from contextlib import closing
 from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+from PIL import Image
 
+from app import db
 from app.detector import MODEL_PATH, detect
 from app.guards import MAX_BYTES, RejectedUpload, check_upload
+from app.tools import as_api_detection
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
+DB_PATH = os.getenv("VISION_DB_PATH", "data/vision.db")
+MODEL_VERSION = "yolov8n-onnx-640"
 
-app = FastAPI(title="Vision Agent", version="0.2")
+app = FastAPI(title="Vision Agent", version="0.3")
 
 
 def require_api_key(x_api_key: str | None = Header(default=None)):
@@ -29,8 +37,25 @@ def health():
     return {"status": "ok", "model_file_present": Path(MODEL_PATH).exists()}
 
 
-# Plain def, not async def: detect() is CPU-bound. FastAPI runs plain functions
-# in a thread pool, so the server stays responsive.
+def _store(sha256, width, height, detections):
+    rows = [
+        {
+            "label": d["label"],
+            "confidence": d["confidence"],
+            "x1": d["bbox"][0], "y1": d["bbox"][1],
+            "x2": d["bbox"][2], "y2": d["bbox"][3],
+        }
+        for d in detections
+    ]
+    db.init_db(DB_PATH)
+    with closing(db.connect(DB_PATH)) as conn:
+        image_id = db.insert_image(conn, sha256, width, height)
+        db.insert_detections(conn, image_id, rows, MODEL_VERSION)
+    return image_id
+
+
+# Plain def, not async def: detect() is CPU-bound. FastAPI runs plain functions in a
+# thread pool, so the server stays responsive.
 @app.post("/detect", dependencies=[Depends(require_api_key)])
 def detect_endpoint(file: UploadFile = File(...)):
     data = file.file.read(MAX_BYTES + 1)  # read at most one byte over the limit
@@ -40,6 +65,23 @@ def detect_endpoint(file: UploadFile = File(...)):
         raise HTTPException(e.status, e.message)
 
     sha256 = hashlib.sha256(data).hexdigest()
+
+    # Cache hit: same bytes seen before, with detections stored. Skip the model.
+    db.init_db(DB_PATH)
+    with closing(db.connect(DB_PATH)) as conn:
+        image = db.get_image_by_sha(conn, sha256)
+        if image is not None and db.has_detections(conn, image["id"]):
+            rows = db.get_detections(conn, image["id"])
+            return {
+                "image_id": image["id"],
+                "sha256": sha256,
+                "cached": True,
+                "detections": [as_api_detection(r) for r in rows],
+            }
+
+    # Cache miss: run the model on a temp file, then delete it.
+    with Image.open(io.BytesIO(data)) as img:
+        width, height = img.size
     suffix = ".jpg" if data.startswith(b"\xff\xd8\xff") else ".png"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(data)
@@ -47,5 +89,12 @@ def detect_endpoint(file: UploadFile = File(...)):
     try:
         detections = detect(path)
     finally:
-        os.remove(path)  # uploads are never kept on disk
-    return {"sha256": sha256, "detections": detections}
+        os.remove(path)
+
+    image_id = _store(sha256, width, height, detections)
+    return {
+        "image_id": image_id,
+        "sha256": sha256,
+        "cached": False,
+        "detections": detections,
+    }
