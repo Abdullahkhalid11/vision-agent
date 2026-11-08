@@ -6,3 +6,4 @@ onnxruntime>=1.18
 pillow>=10.0
 numpy>=1.26
 psutil>=5.9
+groq>=1.7.0
