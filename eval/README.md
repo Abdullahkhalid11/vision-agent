@@ -8,3 +8,7 @@
 6. Scoring is fixed here. Do not change a row, a rule, or a threshold after seeing results. If something must change, record the change and the reason in this file, and keep the original results.
 7. Report every failure with its tool trace. Do not hide failed rows.
 8. Infrared image test2 is a known domain shift. Its results are reported separately.
+
+## Amendment (Sun Nov 8, 2026, before any expected value was filled)
+
+Rule 2 is clarified. Expected counts and yes/no answers are a human count of the requested objects that are clearly visible in the full-size image, applying rule 4 for partly visible objects. The 0.5 confidence threshold applies to the agent's tool calls and the detector's output. It does not apply to the human ground truth. Question text still states the threshold, so the agent and the harness count the same way.
