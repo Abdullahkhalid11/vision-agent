@@ -275,3 +275,25 @@ def _cli() -> None:
 
 if __name__ == "__main__":
     _cli()
+
+
+def find_images_by_label(
+    conn: sqlite3.Connection,
+    label: str,
+    since: str,
+    until: str,
+    min_confidence: float,
+    limit: int,
+) -> list[dict[str, Any]]:
+    """Images with at least one detection of `label` at or above min_confidence, whose
+    UTC date (first 10 characters of created_at) lies in [since, until] inclusive.
+    since and until are YYYY-MM-DD strings. Newest first. All values are bound parameters."""
+    rows = conn.execute(
+        "SELECT i.id AS image_id, i.created_at AS created_at, COUNT(d.id) AS count "
+        "FROM images AS i JOIN detections AS d ON d.image_id = i.id "
+        "WHERE d.label = ? AND d.confidence >= ? "
+        "AND substr(i.created_at, 1, 10) >= ? AND substr(i.created_at, 1, 10) <= ? "
+        "GROUP BY i.id ORDER BY i.created_at DESC LIMIT ?",
+        (label, min_confidence, since, until, limit),
+    ).fetchall()
+    return [dict(r) for r in rows]

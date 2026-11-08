@@ -10,11 +10,15 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from PIL import Image
+from pydantic import BaseModel, Field
 
 from app import db
+from app.ask import handle_question
 from app.detector import MODEL_PATH, detect
 from app.guards import MAX_BYTES, RejectedUpload, check_upload
+from app.llm import groq_llm
 from app.tools import as_api_detection
 
 load_dotenv()
@@ -22,7 +26,7 @@ API_KEY = os.getenv("API_KEY")
 DB_PATH = os.getenv("VISION_DB_PATH", "data/vision.db")
 MODEL_VERSION = "yolov8n-onnx-640"
 
-app = FastAPI(title="Vision Agent", version="0.3")
+app = FastAPI(title="Vision Agent", version="0.4")
 
 
 def require_api_key(x_api_key: str | None = Header(default=None)):
@@ -98,3 +102,17 @@ def detect_endpoint(file: UploadFile = File(...)):
         "cached": False,
         "detections": detections,
     }
+
+
+class AskRequest(BaseModel):
+    image_id: str = Field(min_length=1, max_length=64)
+    question: str = Field(min_length=1, max_length=500)
+
+
+@app.post("/ask", dependencies=[Depends(require_api_key)])
+def ask_endpoint(body: AskRequest):
+    # groq_llm is looked up at call time so tests can replace it.
+    db.init_db(DB_PATH)
+    with closing(db.connect(DB_PATH)) as conn:
+        status, payload = handle_question(conn, body.image_id, body.question, groq_llm)
+    return JSONResponse(status_code=status, content=payload)
