@@ -19,6 +19,7 @@ from app.ask import handle_question
 from app.detector import MODEL_PATH, detect
 from app.guards import MAX_BYTES, RejectedUpload, check_upload
 from app.llm import groq_llm
+from app.rate_limit import TokenBucketLimiter
 from app.tools import as_api_detection
 
 load_dotenv()
@@ -27,6 +28,13 @@ DB_PATH = os.getenv("VISION_DB_PATH", "data/vision.db")
 MODEL_VERSION = "yolov8n-onnx-640"
 
 app = FastAPI(title="Vision Agent", version="0.4")
+
+limiter = TokenBucketLimiter()  # 20 requests per minute per API key
+
+
+def rate_limit(x_api_key: str | None = Header(default=None)):
+    if not limiter.allow(x_api_key or "anonymous"):
+        raise HTTPException(429, "rate limit exceeded; try again shortly")
 
 
 def require_api_key(x_api_key: str | None = Header(default=None)):
@@ -109,7 +117,7 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=500)
 
 
-@app.post("/ask", dependencies=[Depends(require_api_key)])
+@app.post("/ask", dependencies=[Depends(require_api_key), Depends(rate_limit)])
 def ask_endpoint(body: AskRequest):
     # groq_llm is looked up at call time so tests can replace it.
     db.init_db(DB_PATH)
