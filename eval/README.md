@@ -12,3 +12,8 @@
 ## Amendment (Sun Nov 8, 2026, before any expected value was filled)
 
 Rule 2 is clarified. Expected counts and yes/no answers are a human count of the requested objects that are clearly visible in the full-size image, applying rule 4 for partly visible objects. The 0.5 confidence threshold applies to the agent's tool calls and the detector's output. It does not apply to the human ground truth. Question text still states the threshold, so the agent and the harness count the same way.
+
+
+## Amendment 2 (Sun Nov 8, 2026, after values were filled, before any agent run)
+
+Cross-image expected sets are derived from the per-image rows, using the same rule as the count and yes/no rows. The first draft of x01 was blank and x02 listed only test2.jpg. Both were corrected to match c01 to c08, e01 to e04, and b02. Original draft values are kept in git history at commit da2a884.
