@@ -141,3 +141,14 @@ def test_percentile():
     assert percentile([10, 20, 30, 40, 50], 0.5) == 30
     assert percentile([10, 20, 30, 40, 50], 0.95) == 50
     assert percentile([], 0.5) is None
+
+
+def test_count_ignores_threshold_echoed_in_answer():
+    # Regression: "0.5" was read as the numbers 0 and 5, so correct counts failed.
+    answer = "There are 8 cars in the image with confidence 0.5 or higher."
+    assert score_row(count_case(8), ok(answer), NAMES)["verdict"] == "pass"
+
+
+def test_count_still_fails_when_real_number_differs_from_threshold_echo():
+    answer = "I found 7 cars at confidence 0.5 or higher."
+    assert score_row(count_case(8), ok(answer), NAMES)["verdict"] == "fail"

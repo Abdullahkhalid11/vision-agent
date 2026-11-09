@@ -13,7 +13,17 @@
 
 Rule 2 is clarified. Expected counts and yes/no answers are a human count of the requested objects that are clearly visible in the full-size image, applying rule 4 for partly visible objects. The 0.5 confidence threshold applies to the agent's tool calls and the detector's output. It does not apply to the human ground truth. Question text still states the threshold, so the agent and the harness count the same way.
 
-
 ## Amendment 2 (Sun Nov 8, 2026, after values were filled, before any agent run)
 
 Cross-image expected sets are derived from the per-image rows, using the same rule as the count and yes/no rows. The first draft of x01 was blank and x02 listed only test2.jpg. Both were corrected to match c01 to c08, e01 to e04, and b02. Original draft values are kept in git history at commit da2a884.
+
+
+
+## Known findings (Sun Nov 8, 2026; not rules, not amendments)
+
+- All six automatic failures (c01, c02, c03, c08, e04, x02) are cases where the agent's answer matches its tool output exactly. The disagreement comes from the detector at the 0.50 threshold, compared with human visible counts.
+- Detector versus human, test1 cars: 9 at 0.50, 17 at 0.25, human 10.
+- Detector versus human, test4 cars: 4 at 0.50, 11 at 0.25, human 8.
+- test4 person standing on a red car at the left is not detected at any confidence (max 0.00 at the 0.25 floor). Detector miss.
+- test5 sink scores 0.32: below 0.50, so the agent's "No." matches the threshold.
+- Design note: count questions mix a detector-threshold instruction with human ground truth. Future cases should separate detector agreement from human accuracy.

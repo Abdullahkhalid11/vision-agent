@@ -8,6 +8,7 @@ verdict "manual" with the answer attached, so a human decides.
 import re
 
 UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+DECIMAL_RE = re.compile(r"\b\d+\.\d+\b")  # thresholds such as 0.5 are not counts
 INT_RE = re.compile(r"\b\d+\b")
 YESNO_RE = re.compile(r"\b(yes|no)\b", re.IGNORECASE)
 AUTOMATIC_TYPES = {"count", "exists", "cross"}
@@ -69,7 +70,7 @@ def score_row(case, response, id_to_name):
         return _result("fail", f"HTTP {status}: {body.get('error', 'no detail')}")
 
     if case["type"] == "count":
-        found = {int(n) for n in INT_RE.findall(answer)}
+        found = {int(n) for n in INT_RE.findall(DECIMAL_RE.sub(" ", answer))}
         if len(found) == 1 and found == {case["expected"]}:
             return _result("pass", f"answer contains {case['expected']}")
         if not found:
