@@ -18,5 +18,5 @@ Decided against the expected wording in eval/cases.jsonl. The generated report i
 ## b02 (ambiguous): PASS
 
 - Answer: "Yes."
-- Reason: matches the expected yes. One successful detect_objects call, consistent with one car at 0.50 or higher in test2.
-- Date: 2026-11-09
+- Reason: matches the expected yes. One successful detect_objects call returned three detections at confidence 0.50 or higher in test2: car (0.854), bicycle (0.828), and person (0.811). The answer is correct for the car question. The earlier wording ("one car") was wrong and is corrected here.
+- Date: 2026-11-09 (reason corrected 2026-11-09)
