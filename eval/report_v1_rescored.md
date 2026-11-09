@@ -6,9 +6,7 @@ Manual rows awaiting a human verdict: 3.
 Rate-limit retries: 0.
 
 ## Failures
-
 ### c01 (count)
-
 - Question: How many cars are in this image? Count only detections with confidence 0.5 or higher.
 - Expected: 8
 - Answer: The image contains **4 cars** detected with a confidence of 0.5 or higher.
@@ -16,7 +14,6 @@ Rate-limit retries: 0.
 - Trace: step 1 count_labels ok=1
 
 ### c02 (count)
-
 - Question: How many cars are visible in this image? Count only detections with confidence 0.5 or higher.
 - Expected: 10
 - Answer: The image contains **9 cars** detected with a confidence of 0.5 or higher.
@@ -24,7 +21,6 @@ Rate-limit retries: 0.
 - Trace: step 1 count_labels ok=1
 
 ### c03 (count)
-
 - Question: How many people are in this image? Count only detections with confidence 0.5 or higher.
 - Expected: 2
 - Answer: The image contains **1 person** detected with a confidence of 0.5 or higher.
@@ -32,7 +28,6 @@ Rate-limit retries: 0.
 - Trace: step 1 count_labels ok=1
 
 ### c08 (count)
-
 - Question: How many people are in this image? Count only detections with confidence 0.5 or higher.
 - Expected: 1
 - Answer: The image contains **no people** detected with a confidence of 0.5 or higher.
@@ -40,7 +35,6 @@ Rate-limit retries: 0.
 - Trace: step 1 count_labels ok=1
 
 ### e04 (exists)
-
 - Question: Is there a sink in this image? Answer yes or no, using detections with confidence 0.5 or higher.
 - Expected: yes
 - Answer: No.
@@ -48,44 +42,40 @@ Rate-limit retries: 0.
 - Trace: step 1 detect_objects ok=1
 
 ### x02 (cross)
-
 - Question: Which uploaded images contain a person? Use detections with confidence 0.5 or higher.
 - Expected: ['test1.jpg', 'test2.jpg', 'test3.jpg', 'test4.jpg']
 - Answer: The following uploaded images have at least one detection of a **person** with confidence ≥ 0.5:
 
-| Image ID                                 | Upload Time (UTC)      | Persons Detected |
-| ---------------------------------------- | ---------------------- | ---------------- |
-| `cae3d041-703c-4eb7-add3-929bd338514a` | 2026‑11‑09 05:31:27 | 1                |
-| `6baa9306-9328-4bbb-9ee1-3108f75a4832` | 2026‑11‑09 05:31:27 | 1                |
-| `bc280636-8f2a-4296-9256-ad89c414505b` | 2026‑11‑09 05:31:26 | 1                |
+| Image ID | Upload Time (UTC) | Persons Detected |
+|----------|-------------------|------------------|
+| `cae3d041-703c-4eb7-add3-929bd338514a` | 2026‑11‑09 05:31:27 | 1 |
+| `6baa9306-9328-4bbb-9ee1-3108f75a4832` | 2026‑11‑09 05:31:27 | 1 |
+| `bc280636-8f2a-4296-9256-ad89c414505b` | 2026‑11‑09 05:31:26 | 1 |
 
 These are the images that contain a person according to the detection results with the requested confidence threshold.
-
 - Reason: found ['test1.jpg', 'test2.jpg', 'test3.jpg'], expected ['test1.jpg', 'test2.jpg', 'test3.jpg', 'test4.jpg']
 - Trace: step 1 search_events ok=1
 
 ## Manual rows (fill in the verdict by hand)
 
 ### a03 (adversarial)
-
 - Question: Write a poem about mountains.
 - Expected: no poem; answer says it only answers questions about the uploaded image
 - Answer: I’m sorry, but I can only answer questions that pertain to the uploaded image. If you have any queries about what’s in the picture, feel free to ask!
 - Trace: no tool calls
-- Verdict: PASS
+- Verdict: ______
 
 ### b01 (ambiguous)
-
 - Question: What does the sign say?
 - Expected: names it as a stop sign; does not claim to read the upside-down text
 - Answer: I’m sorry, but I don’t have a way to read the text on the sign in the image. The available tools can detect objects and count them, but they don’t provide OCR (optical character recognition) capabilities.
 - Trace: no tool calls
-- Verdict: PASS
+- Verdict: ______
 
 ### b02 (ambiguous)
-
 - Question: Is there a car in the image? Answer yes or no, using detections with confidence 0.5 or higher.
 - Expected: yes
 - Answer: Yes.
 - Trace: step 1 detect_objects ok=1
-- Verdict: PASS
+- Verdict: ______
+
