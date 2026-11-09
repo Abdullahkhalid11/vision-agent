@@ -1,0 +1,1 @@
+﻿{"runs":4,"by_status":{"ok":4},"error_rate":0.0,"latency_ms":{"n":4,"p50":1276,"p95":3178},"tokens":{"input":3680,"output":342},"runs_without_usage":0,"estimated_cost_usd":null}
