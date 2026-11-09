@@ -297,3 +297,12 @@ def find_images_by_label(
         (label, min_confidence, since, until, limit),
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def get_run_rows(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    """All agent runs, for analytics. Read-only."""
+    rows = conn.execute(
+        "SELECT status, total_latency_ms, input_tokens, output_tokens, created_at "
+        "FROM agent_runs ORDER BY created_at"
+    ).fetchall()
+    return [dict(r) for r in rows]

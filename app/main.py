@@ -15,6 +15,7 @@ from PIL import Image
 from pydantic import BaseModel, Field
 
 from app import db
+from app.analytics import summarise
 from app.ask import handle_question
 from app.detector import MODEL_PATH, detect
 from app.guards import MAX_BYTES, RejectedUpload, check_upload
@@ -124,3 +125,11 @@ def ask_endpoint(body: AskRequest):
     with closing(db.connect(DB_PATH)) as conn:
         status, payload = handle_question(conn, body.image_id, body.question, groq_llm)
     return JSONResponse(status_code=status, content=payload)
+
+
+@app.get("/analytics", dependencies=[Depends(require_api_key)])
+def analytics_endpoint():
+    db.init_db(DB_PATH)
+    with closing(db.connect(DB_PATH)) as conn:
+        runs = db.get_run_rows(conn)
+    return summarise(runs)
